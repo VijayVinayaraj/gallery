@@ -4,16 +4,16 @@ import { GLTFLoader } from "./node_modules/three/examples/jsm/loaders/GLTFLoader
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
-  90,
+  75,
   window.innerWidth / window.innerHeight,
-  1,
-  10000
+  0.1,
+  2000
 );
 
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-const loader = new GLTFLoader().setPath("3d_object/gallery/");
+const loader = new GLTFLoader().setPath("3d_object/gallery2/");
 scene.background = new THREE.Color(0xffffff);
 
 var domEvents = new THREEx.DomEvents(camera, renderer.domElement);
@@ -21,9 +21,13 @@ let new_camera={x:0,y:0,z:0}
 let camera_x, camera_y, camera_z;
 
 loader.load("scene.gltf", function (gltf) {
-  scene.add(gltf.scene);
+	gltf.scene.position.set(0,0,0)
+ scene.add(gltf.scene);
 });
 
+const controls = new OrbitControls( camera, renderer.domElement );
+controls.maxDistance=1
+controls.update();
 const geometry = new THREE.BoxGeometry(100,100,100);
 const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(geometry, material);
@@ -31,7 +35,11 @@ const cube = new THREE.Mesh(geometry, material);
 
 //gsap.to(cube,{duration: 20,x: 500})
 
-//camera.position.set(3000,1000,0)
+camera.position.set(0,0,-0.5)
+
+const gridHelper = new THREE.GridHelper( 10,10 );
+// scene.add( gridHelper );
+// scene.add( new THREE.AxisHelper(10) );
 
 const animate = function () {
   requestAnimationFrame(animate);
@@ -39,6 +47,8 @@ const animate = function () {
   render();
 };
 
+const light =new THREE.PointLight({color:0xffffff,intensity:2})
+scene.add(light)
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
@@ -49,15 +59,7 @@ function onMouseMove(event) {
   mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 }
 
-const controls = new OrbitControls(camera, renderer.domElement);
 
-controls.minDistance = 0;
-controls.maxDistance = 500;
-camera_x = 2000;
-camera_y = 1000;
-camera_z = 0;
-controls.target.set(camera_x, camera_y, camera_z);
-controls.update();
 
 window.addEventListener("resize", onWindowResize, false);
 
@@ -67,14 +69,15 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   render();
 }
-const geometry1 = new THREE.PlaneBufferGeometry(600, 700, 32);
+const geometry1 = new THREE.PlaneBufferGeometry(1.5,1.5,1);
 const material1 = new THREE.MeshBasicMaterial({
   color: 0xffff00,
-  side: THREE.DoubleSide,
+  transparent:false,
+  opacity:0.5
 });
 const plane = new THREE.Mesh(geometry1, material1);
 scene.add(plane);
-plane.position.set(2850, 1300, -800);
+plane.position.set(0, 0.3, -4.01);
 
 // renderer.gammaOutput = true;
 // renderer.gammaFactor = 2.2;
@@ -83,11 +86,12 @@ function render() {
   raycaster.setFromCamera(mouse, camera);
 
   const intersects = raycaster.intersectObjects(scene.children);
-
+//console.log(intersects)
   for (let i = 0; i < intersects.length; i++) {
-    new_camera.x = intersects[i].object.position.x;
-    new_camera.y = intersects[i].object.position.y;
-    new_camera.z = intersects[i].object.position.z;
+
+    new_camera= intersects[i].object.position;
+   
+	
     //intersects[ i ].object.material.color.set( 0x0000ff );
   }
 
@@ -99,7 +103,7 @@ window.addEventListener("mousemove", onMouseMove, false);
 animate();
 
 domEvents.addEventListener(plane, "click", (event) => {
-	
-  camera.position.set(new_camera.x,new_camera.y,new_camera.z + 500);
+	console.log(new_camera.x,new_camera.y,new_camera.z)
+  camera.position.set(new_camera.x,new_camera.y,new_camera.z +1.8);
   camera.lookAt(new_camera.x,new_camera.y,new_camera.z);
 });
