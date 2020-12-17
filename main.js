@@ -1,104 +1,105 @@
-import * as THREE from './node_modules/three/build/three.module.js'
-import {OrbitControls} from './node_modules/three/examples/jsm/controls/OrbitControls.js'
-import { GLTFLoader } from './node_modules/three/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from "./node_modules/three/build/three.module.js";
+import { OrbitControls } from "./node_modules/three/examples/jsm/controls/OrbitControls.js";
+import { GLTFLoader } from "./node_modules/three/examples/jsm/loaders/GLTFLoader.js";
 
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(
+  90,
+  window.innerWidth / window.innerHeight,
+  1,
+  10000
+);
 
-                const scene = new THREE.Scene();
-			const camera = new THREE.PerspectiveCamera( 90, window.innerWidth / window.innerHeight, 1, 10000 );
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+const loader = new GLTFLoader().setPath("3d_object/gallery/");
+scene.background = new THREE.Color(0xffffff);
 
-			const renderer = new THREE.WebGLRenderer();
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			document.body.appendChild( renderer.domElement );
-            const loader = new GLTFLoader().setPath( '3d_object/gallery/' );
-            scene.background = new THREE.Color( 0xffffff );
+var domEvents = new THREEx.DomEvents(camera, renderer.domElement);
+let new_camera={x:0,y:0,z:0}
+let camera_x, camera_y, camera_z;
 
-			const helper = new THREE.CameraHelper( camera );
-			scene.add( helper );
+loader.load("scene.gltf", function (gltf) {
+  scene.add(gltf.scene);
+});
 
-         loader.load('scene.gltf', function (gltf){
-            scene.add(gltf.scene)
-         })
+const geometry = new THREE.BoxGeometry(100,100,100);
+const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+const cube = new THREE.Mesh(geometry, material);
+//scene.add( cube );
 
-        
-			const geometry = new THREE.BoxGeometry();
-            const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-			const cube = new THREE.Mesh( geometry, material );
-			scene.add( cube );
+//gsap.to(cube,{duration: 20,x: 500})
 
-		 //camera.position.set(3000,1000,0)
+//camera.position.set(3000,1000,0)
 
-			
-			const animate = function () {
-				requestAnimationFrame( animate );
+const animate = function () {
+  requestAnimationFrame(animate);
 
-			
-                render()
+  render();
+};
 
-            }
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 
-			const raycaster = new THREE.Raycaster();
-                  const mouse = new THREE.Vector2();
+function onMouseMove(event) {
+  event.preventDefault();
 
-                   function onMouseMove( event ) {
-
-					event.preventDefault();
-	         // calculate mouse position in normalized device coordinates
-                   	// (-1 to +1) for both components
- 
-           	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-         	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 }
-			
 
-				const controls = new OrbitControls( camera, renderer.domElement );
-				//controls.addEventListener( 'change', render ); // use if there is no animation loop
-				controls.minDistance = 0;
-				controls.maxDistance = 500;
-				controls.target.set(3000,1000,0);
-				controls.update();
+const controls = new OrbitControls(camera, renderer.domElement);
 
-				window.addEventListener( 'resize', onWindowResize, false );
+controls.minDistance = 0;
+controls.maxDistance = 500;
+camera_x = 2000;
+camera_y = 1000;
+camera_z = 0;
+controls.target.set(camera_x, camera_y, camera_z);
+controls.update();
 
-				const gridHelper = new THREE.GridHelper( 10000, 100);
-				scene.add( gridHelper );
+window.addEventListener("resize", onWindowResize, false);
 
-				const axesHelper = new THREE.AxesHelper( 10000 );
-                   scene.add( axesHelper );
-			function onWindowResize() {
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  render();
+}
+const geometry1 = new THREE.PlaneBufferGeometry(600, 700, 32);
+const material1 = new THREE.MeshBasicMaterial({
+  color: 0xffff00,
+  side: THREE.DoubleSide,
+});
+const plane = new THREE.Mesh(geometry1, material1);
+scene.add(plane);
+plane.position.set(2850, 1300, -800);
 
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
+// renderer.gammaOutput = true;
+// renderer.gammaFactor = 2.2;
 
-				renderer.setSize( window.innerWidth, window.innerHeight );
+function render() {
+  raycaster.setFromCamera(mouse, camera);
 
-				render();
+  const intersects = raycaster.intersectObjects(scene.children);
 
-			}
-			const geometry1 = new THREE.PlaneBufferGeometry( 600,700, 32 );
-			const material1 = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-			const plane = new THREE.Mesh( geometry1, material1 );
-			scene.add( plane );
-		
-		plane.position.set(2850,1300,-800)
-            // renderer.gammaOutput = true;
-            // renderer.gammaFactor = 2.2;
-			function render() {
-				raycaster.setFromCamera( mouse, camera );
+  for (let i = 0; i < intersects.length; i++) {
+    new_camera.x = intersects[i].object.position.x;
+    new_camera.y = intersects[i].object.position.y;
+    new_camera.z = intersects[i].object.position.z;
+    //intersects[ i ].object.material.color.set( 0x0000ff );
+  }
 
-				// calculate objects intersecting the picking ray
-				const intersects = raycaster.intersectObjects( scene.children );
-				
-				for ( let i = 0; i < intersects.length; i ++ ) {
-						
-					intersects[ i ].object.material.color.set( 0x0000ff );
-			
-				}
-				renderer.render( scene, camera );
+  renderer.render(scene, camera);
+}
 
-			}
+window.addEventListener("mousemove", onMouseMove, false);
 
- 
-			window.addEventListener( 'mousemove', onMouseMove, false );
+animate();
 
-			animate();
+domEvents.addEventListener(plane, "click", (event) => {
+	
+  camera.position.set(new_camera.x,new_camera.y,new_camera.z + 500);
+  camera.lookAt(new_camera.x,new_camera.y,new_camera.z);
+});
