@@ -96,9 +96,9 @@ function render() {
   renderer.render(scene, camera);
 }
 
-function turnCameratoFaceObject(onCompleteFunc){
+function turnCameratoFaceObject(){
   var obj={x:0,y:0,z:0}
-  gsap.to(obj,1,{x:new_camera.x,y:new_camera.y,z:new_camera.z,onUpdate:updateCamera,onComplete:onCompleteFunc})
+  gsap.to(obj,{duration:2,x:new_camera.x,y:new_camera.y,z:new_camera.z,onUpdate:updateCamera})
  function updateCamera(){
   camera.lookAt(obj.x,obj.y,obj.z)
  }
@@ -154,12 +154,12 @@ function addEventListenertoPlane(clickablePlane){
   backButtonClickable=true
   targetList.push(backButton)
     console.log("clicked")
-   turnCameratoFaceObject(start)
+   turnCameratoFaceObject()
  //showImagewithButtonToNavigate('./img/brits_rolex/rolex2.jpg')
- function start(){
-   selectCameraAnimation=gsap.to(camera.position,{duration: 0.5,x:new_camera.x,y:new_camera.y,z:new_camera.z+1,onComplete:onCompleteClickablePlane })
+
+   selectCameraAnimation=gsap.to(camera.position,{duration: 1,delay:1,x:new_camera.x,y:new_camera.y,z:new_camera.z+1,onComplete:onCompleteClickablePlane })
    
- }
+ 
 }
 
 
