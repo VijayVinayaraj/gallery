@@ -32,7 +32,7 @@ var targetList = [];
 var imgNavAnimateTimeline= gsap.timeline()
 gltfloader.load("scene.gltf", function (gltf) {
   gltf.scene.position.set(0, 0, 0);
-// scene.add(gltf.scene);
+scene.add(gltf.scene);
 });
 camera.position.set(0, 0,0.1);
 
