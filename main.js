@@ -20,6 +20,7 @@ let new_camera = { x: 0, y: 0, z: 0 };
 let objectClickable=true;
 let backButtonClickable=false;
 let selectCameraAnimation;
+var index =0
 let loader = new THREE.TextureLoader();
 let rolexImage=['./img/brits_rolex/rolex1.jpg',
                 './img/brits_rolex/rolex2.jpg',
@@ -31,7 +32,7 @@ var targetList = [];
 var imgNavAnimateTimeline= gsap.timeline()
 gltfloader.load("scene.gltf", function (gltf) {
   gltf.scene.position.set(0, 0, 0);
- scene.add(gltf.scene);
+// scene.add(gltf.scene);
 });
 camera.position.set(0, 0,0.1);
 
@@ -39,15 +40,17 @@ camera.position.set(0, 0,0.1);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableZoom=false
-controls.update();
+//controls.update();
 
-const geometry1 = new THREE.PlaneBufferGeometry(1.5, 1.5, 1);
-const material1 = new THREE.MeshLambertMaterial({
+
+
+const planeGeometry = new THREE.PlaneBufferGeometry(1.5, 1.5, 1);
+const planeMaterial = new THREE.MeshLambertMaterial({
   color: 0xffff00,
   transparent: false,
   opacity: 0.5,
 });
-const plane = new THREE.Mesh(geometry1, material1);
+const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 scene.add(plane);
 plane.position.set(0, 0.3, -4.01);
 
@@ -60,7 +63,16 @@ scene.add(light);
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
+var canvasGeometry = new THREE.PlaneBufferGeometry(1.3,1.3,1);
+var canvasMaterial = new THREE.MeshLambertMaterial(  );
+ var canvas = new THREE.Mesh(canvasGeometry, canvasMaterial);
 
+var buttonGeo=new THREE.PlaneBufferGeometry(0.2,0.2);
+var buttonMaterialRight= new THREE.MeshPhongMaterial({color:0xffffff})
+var buttonMaterialLeft= new THREE.MeshPhongMaterial({color:0xffffff})
+
+var rightButton= new THREE.Mesh(buttonGeo,buttonMaterialRight)
+var leftButton = new THREE.Mesh(buttonGeo,buttonMaterialLeft)
 
 
 
@@ -104,26 +116,24 @@ function turnCameratoFaceObject(){
  }
 }
 
-
+var canvas;
 
 function showImagewithButtonToNavigate(image){
-  var canvasGeometry = new THREE.PlaneBufferGeometry();
-  var canvastexture = new THREE.TextureLoader().load( image );
-  var canvasMaterial = new THREE.MeshLambertMaterial( { map: canvastexture } );
-  var canvas = new THREE.Mesh(canvasGeometry, canvasMaterial);
-  var buttonGeo=new THREE.PlaneBufferGeometry(0.2,0.2);
-  var buttonMaterial= new THREE.MeshPhongMaterial({color:0xffffff})
-  var rightButton= new THREE.Mesh(buttonGeo,buttonMaterial)
-  var leftButton = new THREE.Mesh(buttonGeo,buttonMaterial)
+  console.log("show image")
+  canvasMaterial.map=loader.load(image)
+  buttonMaterialRight.map=loader.load('./img/arrow/right_arrow.png')
+  buttonMaterialLeft.map=loader.load('./img/arrow/left_arrow.png')
   plane.add(canvas)
   canvas.add(rightButton);
   canvas.add(leftButton);
   rightButton.position.z=-0.001
   leftButton.position.z=-0.001
+  imgNavAnimateTimeline.play()
   imgNavAnimateTimeline
   .to(canvas.position,1,{z:+0.1})
-  .to(rightButton.position,0.5,{x:+0.7})
-  .to(leftButton.position,0.5,{x:-0.7})
+  .to(rightButton.position,0.5,{x:+1})
+  .to(leftButton.position,0.5,{x:-1})
+  console.log(imgNavAnimateTimeline)
 }
 
 function addTexture(imageTobeAdded,material,number){
@@ -135,16 +145,6 @@ function addTexture(imageTobeAdded,material,number){
 
 }
 
-// domEvents.addEventListener(leftButton,"click",(event)=>{
-//    addTexture(rolexImage,canvasMaterial,number)
-//    number--
-// })
-
-// domEvents.addEventListener(rightButton,"click",(event)=>{
-//   if(imageNumber)
-//   imageNumber++
-//   addTexture(rolexImage,canvasMaterial,imageNumber)
-// })
 
 
 
@@ -155,7 +155,7 @@ function addEventListenertoPlane(clickablePlane){
   targetList.push(backButton)
     console.log("clicked")
    turnCameratoFaceObject()
- //showImagewithButtonToNavigate('./img/brits_rolex/rolex2.jpg')
+ 
 
    selectCameraAnimation=gsap.to(camera.position,{duration: 1,delay:1,x:new_camera.x,y:new_camera.y,z:new_camera.z+1,onComplete:onCompleteClickablePlane })
    
@@ -165,6 +165,7 @@ function addEventListenertoPlane(clickablePlane){
 
 
 function onCompleteClickablePlane(){
+  showImagewithButtonToNavigate(selectImageToBeRendered("first",rolexImage))
   scene.add(backButton)
   backButton.material.opacity=1
   controls.enabled=false;
@@ -172,13 +173,11 @@ function onCompleteClickablePlane(){
    backButton.position.set(new_camera.x-0.75,new_camera.y-0.3,new_camera.z+.3)
    gsap.from(backButton.material,{duration:1,opacity:0});   
    //addEventListenertoBackbutton(backButton)  
- 
+ targetList.push(leftButton)
+ targetList.push(rightButton)
  
 }
 
-function addBackButton(button){
-
-}
 
 function addEventListenertoBackbutton(button){
    objectClickable=true;
@@ -187,11 +186,31 @@ function addEventListenertoBackbutton(button){
     gsap.to(button.material,{duration:0.5,opacity:0})
     selectCameraAnimation.reverse();
     controls.enabled=true
-    scene.remove()  
+    scene.remove(backButton)
+    hideImagewithButtontoNavigate()
    
-  
 }
 
+function hideImagewithButtontoNavigate(){
+console.log("hide image")
+imgNavAnimateTimeline.reverse();
+console.log(imgNavAnimateTimeline)
+plane.remove(canvas)
+}
+
+function selectImageToBeRendered(button,images){
+  
+  if (button == "left_Button") index--
+  
+  if (button == "right_Button") index++
+  
+  if (index == -1)index = images.length -1
+
+  if (index == images.length) index = 0
+ console.log(index)
+addTexture(images,canvasMaterial,index)
+  
+}
 
 
 
@@ -203,25 +222,18 @@ function onDocumentMouseDown( event )
 	// (such as the mouse's TrackballControls)
 	// event.preventDefault();
 	
-	console.log("Click......");
-	
-	// update the mouse variable
+	console.log("Click......")
 	onMouseMove(event)
-	
-	// find intersections
-
-	// create a Ray with origin at the mouse position
-	//   and direction into the scene (camera direction)
 	raycaster.setFromCamera(mouse,camera)
-
-	// create an array containing all objects in the scene with which the ray intersects
   var intersects = raycaster.intersectObjects( targetList );
-  console.log(intersects)
-	// if there is one (or more) intersections
+
 	if ( intersects.length > 0 )
 	{
     if(intersects[0].object==plane &&objectClickable==true) addEventListenertoPlane(plane);
     if(intersects[0].object==backButton && backButtonClickable==true) addEventListenertoBackbutton(backButton)
+    if(intersects[0].object==rightButton) selectImageToBeRendered("right_Button",rolexImage)
+    if(intersects[0].object==leftButton) selectImageToBeRendered("left_Button",rolexImage)
+
 	}
 
 }
