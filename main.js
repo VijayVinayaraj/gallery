@@ -130,10 +130,10 @@ function showImagewithButtonToNavigate(image){
   leftButton.position.z=-0.001
   imgNavAnimateTimeline.play()
   imgNavAnimateTimeline
-  .to(canvas.position,1,{z:+0.1})
+  .to(canvas.position,{duration:1.5,z:+0.1})
   .to(rightButton.position,0.5,{x:+1})
   .to(leftButton.position,0.5,{x:-1})
-  console.log(imgNavAnimateTimeline)
+  
 }
 
 function addTexture(imageTobeAdded,material,number){
@@ -154,10 +154,10 @@ function addEventListenertoPlane(clickablePlane){
   backButtonClickable=true
   targetList.push(backButton)
     console.log("clicked")
-   turnCameratoFaceObject()
- 
+  // turnCameratoFaceObject()
+ animationForSelectionOfCanvas("play")
 
-   selectCameraAnimation=gsap.to(camera.position,{duration: 1,delay:1,x:new_camera.x,y:new_camera.y,z:new_camera.z+1,onComplete:onCompleteClickablePlane })
+   //selectCameraAnimation=gsap.to(camera.position,{duration: 1,delay:1,x:new_camera.x,y:new_camera.y,z:new_camera.z+1,onComplete:onCompleteClickablePlane })
    
  
 }
@@ -184,7 +184,8 @@ function addEventListenertoBackbutton(button){
    backButtonClickable=false
     console.log("back button clicked")
     gsap.to(button.material,{duration:0.5,opacity:0})
-    selectCameraAnimation.reverse();
+    // selectCameraAnimation.reverse();
+    animationForSelectionOfCanvas("reverse")
     controls.enabled=true
     scene.remove(backButton)
     hideImagewithButtontoNavigate()
@@ -207,7 +208,7 @@ function selectImageToBeRendered(button,images){
   if (index == -1)index = images.length -1
 
   if (index == images.length) index = 0
- console.log(index)
+
 addTexture(images,canvasMaterial,index)
   
 }
@@ -237,6 +238,25 @@ function onDocumentMouseDown( event )
 	}
 
 }
+
+function  animationForSelectionOfCanvas(rev){
+  var timeline1= gsap.timeline();
+  var obj={x:0,y:0,z:0}
+  if (rev == "play"){
+  timeline1.play();
+  timeline1.to(camera.position,{duration: 1.5,x:new_camera.x,y:new_camera.y,z:new_camera.z+1,onComplete:onCompleteClickablePlane,ease:"back.inOut(1)" })
+  .to(obj,{duration:1,x:new_camera.x,y:new_camera.y,z:new_camera.z,onUpdate:()=>{ camera.lookAt(obj.x,obj.y,obj.z)}},"<")
+  }
+  if(rev =="reverse") {
+    gsap.to(camera.position,{duration:1,x:0,y:0,z:0.1})
+  }
+  
+}
+
+
+
+
+
 
 animate();
 window.addEventListener("mousemove", onMouseMove, false);
